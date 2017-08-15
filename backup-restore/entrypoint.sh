@@ -3,7 +3,7 @@
 function clear_dir {
     FS=', ' read -r -a array <<< "$TABLES"
     for TABLE in "${array[@]}"; do
-        rm -rf "${CLICKHOUSE_DATA_PATH}/${DATABASE}/${TABLE}/detached/*"
+        rm -rf "${CLICKHOUSE_DATA_PATH}/${DATABASE}/${TABLE}/detached/"*
     done
 }
 
