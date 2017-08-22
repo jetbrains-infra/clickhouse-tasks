@@ -29,6 +29,7 @@ function get_scheme_from_cluster {
     TABLE=$1
     ID=$2
 
+    echo "ID is ${ID}"
     echo "Getting ${TABLE} scheme from cluster."
     for i in `seq 1 ${NUMBER_INSTANCES}`;
         do
@@ -36,7 +37,7 @@ function get_scheme_from_cluster {
             STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
             if [[ ${STATEMENT} != *"Exception"* ]]; then
                 echo "Got statement (not replaced): ${STATEMENT}"
-                STATEMENT="${STATEMENT/\'${i}\'/\'${ID}\'}"
+                STATEMENT=$(echo ${STATEMENT} | sed s/"'${i}'"/"'${ID}'"/g)
                 STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
                 break
             else
