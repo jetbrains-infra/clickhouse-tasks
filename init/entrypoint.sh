@@ -37,7 +37,7 @@ function get_scheme_from_cluster {
             if [[ ${STATEMENT} != *"Exception"* ]]; then
                 echo "Got statement (not replaced): ${STATEMENT}"
                 STATEMENT="${STATEMENT/\'${i}\'/\'${ID}\'}"
-                STATEMENT="${STATEMENT//\\\'/\'}"
+                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
                 break
             else
                 STATEMENT=""
