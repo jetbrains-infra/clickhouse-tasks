@@ -33,7 +33,7 @@ function get_scheme_from_cluster {
     for i in `seq 1 ${NUMBER_INSTANCES}`;
         do
             echo "Getting scheme from node"
-            STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@localhost:8123/")
+            STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
             if [[ ${STATEMENT} != *"Exception"* ]]; then
                 echo "Got statement (not replaced): ${STATEMENT}"
                 STATEMENT="${STATEMENT/\'${i}\'/\'${ID}\'}"
