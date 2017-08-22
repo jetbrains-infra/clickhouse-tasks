@@ -25,6 +25,23 @@ function delete_node_zk {
     echo "Deleted ${TABLE} from Zookeeper."
 }
 
+function get_scheme_from_cluster {
+    TABLE=$1
+    ID=$2
+
+    echo "Getting ${TABLE} scheme from cluster."
+    for i in `seq 1 ${NUMBER_INSTANCES}`;
+        do
+            echo "Getting scheme from node"
+            STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@localhost:8123/")
+            if [[ ${STATEMENT} != "" ]]; then
+                echo "Got statement (not replaced): ${STATEMENT}"
+                STATEMENT="${STATEMENT/\'${i}\'/\'${ID}\'}"
+                break
+            fi
+        done
+    echo "Got statement: ${STATEMENT}"
+}
 
 function main {
     ID=$(cat ${ID_PATH})
@@ -46,11 +63,22 @@ function main {
             delete_node_zk ${TABLE} ${ID}
         fi
 
-        echo "Loading init script for ${TABLE}"
-        load_file "${S3_CONFIGS_BUCKET}/${TABLE}-init.sh" "${TABLE}-init.sh"
-        chmod +x "${TABLE}-init.sh"
-        ./${TABLE}-init.sh ${USERNAME} ${PASSWORD} ${ID}
-        echo "Init script executed"
+        STATEMENT=""
+        get_scheme_from_cluster ${TABLE} ${ID}
+
+        if [[ ${STATEMENT} != "" ]]; then
+            echo "Executing statement got from cluster"
+            curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
+            echo "Statement got from cluster executed"
+        else
+            echo "Loading init script for ${TABLE}"
+            load_file "${S3_CONFIGS_BUCKET}/${TABLE}-init.sh" "${TABLE}-init.sh"
+            chmod +x "${TABLE}-init.sh"
+            ./${TABLE}-init.sh ${USERNAME} ${PASSWORD} ${ID}
+            echo "Init script executed"
+        fi
+
+
     done
 
     echo "Done initializing Clickhouse"
