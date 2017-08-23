@@ -61,24 +61,22 @@ function main {
     FS=', ' read -r -a array <<< "$TABLES"
     for TABLE in "${array[@]}"
     do
-        IS_EXISTS=$(echo "EXISTS ${TABLE}" | POST "http://${USERNAME}:${PASSWORD}@localhost:8123/")
+        IS_EXISTS=$(curl --data "EXISTS ${TABLE}" "http://${USERNAME}:${PASSWORD}@localhost:8123/")
         echo "Is exists ${TABLE} = ${IS_EXISTS}"
         if [[ ${IS_EXISTS} = "0" ]]; then
             delete_node_zk ${TABLE} ${ID}
-
             STATEMENT=""
             get_scheme_from_cluster ${TABLE} ${ID}
-
             if [[ ${STATEMENT} != "" ]]; then
                 echo "Executing statement got from cluster"
                 curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
                 echo "Statement got from cluster executed"
             else
-                echo "Loading init script for ${TABLE}"
-                load_file "${S3_CONFIGS_BUCKET}/${TABLE}-init.sh" "${TABLE}-init.sh"
-                chmod +x "${TABLE}-init.sh"
-                ./${TABLE}-init.sh ${USERNAME} ${PASSWORD} ${ID}
-                echo "Init script executed"
+                echo "Loading init sql for ${TABLE}"
+                load_file "${S3_CONFIGS_BUCKET}/${TABLE}.sql" "${TABLE}.sql"
+                STATEMENT=$(cat "${TABLE}.sql")
+                curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
+                echo "Init sql executed"
             fi
         else
             echo "Table ${TABLE} already exists."
