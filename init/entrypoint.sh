@@ -37,8 +37,8 @@ function get_scheme_from_cluster {
             STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
             if [[ ${STATEMENT} != *"Exception"* ]]; then
                 echo "Got statement (not replaced): ${STATEMENT}"
+                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"\'"/g)
                 STATEMENT=$(echo ${STATEMENT} | sed s/"'${i}'"/"'${ID}'"/g)
-                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
                 break
             else
                 STATEMENT=""
