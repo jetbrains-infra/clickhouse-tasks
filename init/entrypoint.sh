@@ -29,15 +29,13 @@ function get_scheme_from_cluster {
     TABLE=$1
     ID=$2
 
-    echo "ID is ${ID}"
     echo "Getting ${TABLE} scheme from cluster."
     for i in `seq 1 ${NUMBER_INSTANCES}`;
         do
             echo "Getting scheme from node"
             STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
             if [[ ${STATEMENT} != *"Exception"* ]]; then
-                echo "Got statement (not replaced): ${STATEMENT}"
-                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"\'"/g)
+                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
                 STATEMENT=$(echo ${STATEMENT} | sed s/"'${i}'"/"'${ID}'"/g)
                 break
             else
@@ -50,6 +48,8 @@ function get_scheme_from_cluster {
 function main {
     ID=$(cat ${ID_PATH})
     update_conf
+
+    echo "Node ID is ${ID}"
 
     echo "Starting registering"
     until $(curl --output /dev/null --silent --head --fail http://localhost:8123); do
@@ -65,24 +65,24 @@ function main {
         echo "Is exists ${TABLE} = ${IS_EXISTS}"
         if [[ ${IS_EXISTS} = "0" ]]; then
             delete_node_zk ${TABLE} ${ID}
-        fi
 
-        STATEMENT=""
-        get_scheme_from_cluster ${TABLE} ${ID}
+            STATEMENT=""
+            get_scheme_from_cluster ${TABLE} ${ID}
 
-        if [[ ${STATEMENT} != "" ]]; then
-            echo "Executing statement got from cluster"
-            curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
-            echo "Statement got from cluster executed"
+            if [[ ${STATEMENT} != "" ]]; then
+                echo "Executing statement got from cluster"
+                curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
+                echo "Statement got from cluster executed"
+            else
+                echo "Loading init script for ${TABLE}"
+                load_file "${S3_CONFIGS_BUCKET}/${TABLE}-init.sh" "${TABLE}-init.sh"
+                chmod +x "${TABLE}-init.sh"
+                ./${TABLE}-init.sh ${USERNAME} ${PASSWORD} ${ID}
+                echo "Init script executed"
+            fi
         else
-            echo "Loading init script for ${TABLE}"
-            load_file "${S3_CONFIGS_BUCKET}/${TABLE}-init.sh" "${TABLE}-init.sh"
-            chmod +x "${TABLE}-init.sh"
-            ./${TABLE}-init.sh ${USERNAME} ${PASSWORD} ${ID}
-            echo "Init script executed"
+            echo "Table ${TABLE} already exists."
         fi
-
-
     done
 
     echo "Done initializing Clickhouse"
