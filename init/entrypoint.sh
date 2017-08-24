@@ -75,6 +75,7 @@ function main {
                 echo "Loading init sql for ${TABLE}"
                 load_file "${S3_CONFIGS_BUCKET}/${TABLE}.sql" "${TABLE}.sql"
                 STATEMENT=$(cat "${TABLE}.sql")
+                STATEMENT=$(echo ${STATEMENT} | sed s/'${ID}'/"${ID}"/g)
                 curl --data "${STATEMENT}" "http://${USERNAME}:${PASSWORD}@localhost:8123/"
                 echo "Init sql executed"
             fi
