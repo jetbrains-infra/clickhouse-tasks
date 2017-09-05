@@ -56,6 +56,10 @@ function attach_partition {
 }
 
 function main {
+    if [[ ${EXECUTE_SCRIPT} == 0 ]]; then
+        exit
+    fi
+
     clear_dir
 
     YEAR=$(date +"%Y")
