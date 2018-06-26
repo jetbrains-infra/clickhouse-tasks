@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 
 function upload_dir {
-    FROM=$1
-    TO=$2
+    local FROM=$1
+    local TO=$2
     echo "Uploading dir from $FROM to $TO"
     aws s3 sync "${FROM}" "s3://${TO}" --quiet
 }
 
 function clear_dir {
-    KEY=$1
+    local KEY=$1
     echo "Clearing dir s3://${KEY}"
     aws s3 rm "s3://${KEY}" --recursive
 }
 
 function backup_partition {
-    PARTITION=$1
-    KEY=$2
+    local PARTITION=$1
+    local KEY=$2
 
     clear_dir "${S3_BACKUPS_BUCKET}/${PARTITION}/${KEY}"
 
@@ -25,7 +25,7 @@ function backup_partition {
         echo "SQL: ALTER TABLE ${TABLE} FREEZE PARTITION '${PARTITION}'"
         echo "ALTER TABLE ${TABLE} FREEZE PARTITION '${PARTITION}'" | POST "http://${USERNAME}:${PASSWORD}@localhost:8123/"
 
-        CURRENT_NUMBER=$(cat ${BACKUP_PATH}/increment.txt)
+        local CURRENT_NUMBER=$(cat ${BACKUP_PATH}/increment.txt)
         upload_dir "${BACKUP_PATH}/${CURRENT_NUMBER}" "${S3_BACKUPS_BUCKET}/${PARTITION}/${KEY}"
     done
 }
@@ -36,9 +36,9 @@ function clear_backup_dir {
 }
 
 function main {
-    DAY=$(date +"%d")
-    YEAR=$(date +"%Y")
-    MONTH=$(date +"%m")
+    local DAY=$(date +"%d")
+    local YEAR=$(date +"%Y")
+    local MONTH=$(date +"%m")
     echo "Current date: ${DAY}/${MONTH}/${YEAR}"
 
     if [[ ${FULL_BACKUP} == 0 ]]; then
