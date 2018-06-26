@@ -8,9 +8,9 @@ function upload_dir {
 }
 
 function clear_dir {
-    PATH=$1
-    echo "Clearing dir s3://${PATH}"
-    aws s3 rm "s3://${PATH}" --recursive
+    KEY=$1
+    echo "Clearing dir s3://${KEY}"
+    aws s3 rm "s3://${KEY}" --recursive
 }
 
 function backup_partition {
