@@ -14,13 +14,12 @@ function clear_dir {
 }
 
 function backup_partition {
-    CUR_TABLES=$1
-    PARTITION=$2
-    KEY=$3
+    PARTITION=$1
+    KEY=$2
 
     clear_dir "${S3_BACKUPS_BUCKET}/${PARTITION}/${KEY}"
 
-    read -r -a array <<< "$CUR_TABLES"
+    read -r -a array <<< "${TABLES}"
     for TABLE in "${array[@]}"; do
         echo "Backuping table ${TABLE}"
         echo "SQL: ALTER TABLE ${TABLE} FREEZE PARTITION '${PARTITION}'"
@@ -44,17 +43,17 @@ function main {
 
     if [[ ${FULL_BACKUP} == 0 ]]; then
         if [[ ${DAY} = "${DAY_TO_UPDATE_LAST_MONTH}" ]]; then
-            backup_partition ${TABLES} $(date -d "-1 month" +"%Y%m") "full"
+            backup_partition $(date -d "-1 month" +"%Y%m") "full"
         fi
-        backup_partition ${TABLES} $(date +"%Y%m") ${DAY}
+        backup_partition $(date +"%Y%m") ${DAY}
     else
         for CUR_YEAR in $(seq ${START_YEAR} ${YEAR}); do
             for CUR_MONTH in 01 02 03 04 05 06 07 08 09 10 11 12; do
                 if [[ ${CUR_YEAR} =  ${YEAR} && ${CUR_MONTH} = ${MONTH} ]]; then
-                    backup_partition ${TABLES} "${CUR_YEAR}${CUR_MONTH}" ${DAY}
+                    backup_partition "${CUR_YEAR}${CUR_MONTH}" ${DAY}
                     break
                 fi
-                backup_partition ${TABLES} "${CUR_YEAR}${CUR_MONTH}" "full"
+                backup_partition "${CUR_YEAR}${CUR_MONTH}" "full"
             done
         done
     fi
