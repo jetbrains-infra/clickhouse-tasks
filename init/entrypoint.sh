@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 function load_file {
-    FROM=$1
-    TO=$2
+    local FROM=$1
+    local TO=$2
+    echo "Loading file from s3://${FROM} to ${TO}"
     aws s3 cp "s3://${FROM}" ${TO}
 }
 
@@ -14,8 +15,8 @@ function update_conf {
 }
 
 function delete_node_zk {
-    TABLE=$1
-    ID=$2
+    local TABLE=$1
+    local ID=$2
     echo "Deleting ${TABLE} from Zookeeper."
     for i in `seq 1 ${NUMBER_INSTANCES}`;
         do
@@ -26,8 +27,8 @@ function delete_node_zk {
 }
 
 function get_scheme_from_cluster {
-    TABLE=$1
-    ID=$2
+    local TABLE=$1
+    local ID=$2
 
     echo "Getting ${TABLE} scheme from cluster."
     for i in `seq 1 ${NUMBER_INSTANCES}`;
@@ -46,7 +47,7 @@ function get_scheme_from_cluster {
 }
 
 function main {
-    ID=$(cat ${ID_PATH})
+    local ID=$(cat ${ID_PATH})
     update_conf
 
     echo "Node ID is ${ID}"
@@ -58,7 +59,7 @@ function main {
     done
     echo "Initializing Clickhouse"
 
-    FS=', ' read -r -a array <<< "$TABLES"
+    read -r -a array <<< "$TABLES"
     for TABLE in "${array[@]}"
     do
         IS_EXISTS=$(curl --data "EXISTS ${TABLE}" "http://${USERNAME}:${PASSWORD}@localhost:8123/")
@@ -87,4 +88,5 @@ function main {
     echo "Done initializing Clickhouse"
 }
 
+STATEMENT=""
 main
