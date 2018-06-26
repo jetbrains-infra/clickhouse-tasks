@@ -10,7 +10,7 @@ function upload_dir {
 function clear_dir {
     PATH=$1
     echo "Clearing dir s3://${PATH}"
-    aws s3 rm --recursive "s3://${PATH}"
+    aws s3 rm "s3://${PATH}" --recursive
 }
 
 function backup_partition {
