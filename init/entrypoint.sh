@@ -31,6 +31,7 @@ function get_scheme_from_cluster {
     local ID=$2
 
     if [[ ${TABLE} = *"Local"* ]]; then
+        sleep 120
         STATEMENT=""
     else
         echo "Getting ${TABLE} scheme from cluster."
@@ -88,7 +89,6 @@ function main {
             echo "Table ${TABLE} already exists."
         fi
 
-        sleep 60
     done
 
     echo "Done initializing Clickhouse"
