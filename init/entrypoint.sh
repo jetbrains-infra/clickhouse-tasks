@@ -87,6 +87,8 @@ function main {
         else
             echo "Table ${TABLE} already exists."
         fi
+
+        sleep 60
     done
 
     echo "Done initializing Clickhouse"
