@@ -30,19 +30,23 @@ function get_scheme_from_cluster {
     local TABLE=$1
     local ID=$2
 
-    echo "Getting ${TABLE} scheme from cluster."
-    for i in `seq 1 ${NUMBER_INSTANCES}`;
-        do
-            echo "Getting scheme from node"
-            STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
-            if [[ ${STATEMENT} != *"Exception"* ]]; then
-                STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
-                STATEMENT=$(echo ${STATEMENT} | sed s/"'${i}'"/"'${ID}'"/g)
-                break
-            else
-                STATEMENT=""
-            fi
-        done
+    if [[ ${TABLE} = *"Local"* ]]; then
+        STATEMENT=""
+    else
+        echo "Getting ${TABLE} scheme from cluster."
+        for i in `seq 1 ${NUMBER_INSTANCES}`;
+            do
+                echo "Getting scheme from node"
+                STATEMENT=$(curl --data "SHOW CREATE TABLE ${TABLE}" "http://${USERNAME}:${PASSWORD}@${INSTANCE_NAME}${i}.${ZONE_NAME}:8123/")
+                if [[ ${STATEMENT} != *"Exception"* ]]; then
+                    STATEMENT=$(echo ${STATEMENT} | sed s/"\\\'"/"'"/g)
+                    STATEMENT=$(echo ${STATEMENT} | sed s/"'${i}'"/"'${ID}'"/g)
+                    break
+                else
+                    STATEMENT=""
+                fi
+            done
+    fi
     echo "Got statement: ${STATEMENT}"
 }
 
