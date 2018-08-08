@@ -39,15 +39,18 @@ function main {
     done
     echo "Recreating tables in  Clickhouse"
 
-    read -r -a array <<< "$TABLES"
-    for TABLE in "${array[@]}"
-    do
-        IS_EXISTS=$(curl --data "EXISTS ${TABLE}" "http://${USERNAME}:${PASSWORD}@localhost:8123/")
-        echo "Is exists ${TABLE} = ${IS_EXISTS}"
-        if [[ ${IS_EXISTS} = "1" ]]; then
-            drop_table ${TABLE}
-        fi
-        create_table ${TABLE}
+    for i in `seq 1 ${NUMBER_INSTANCES}`; do
+        local ADDRESS="${INSTANCE_NAME}${i}.${ZONE_NAME}"
+        read -r -a array <<< "$TABLES"
+        for TABLE in "${array[@]}"
+        do
+            IS_EXISTS=$(curl --data "EXISTS ${TABLE}" "http://${USERNAME}:${PASSWORD}@${ADDRESS}:8123/")
+            echo "Is exists ${TABLE} = ${IS_EXISTS}"
+            if [[ ${IS_EXISTS} = "1" ]]; then
+                drop_table ${TABLE}
+            fi
+            create_table ${TABLE}
+        done
     done
 
     echo "Done recreating table in Clickhouse"
